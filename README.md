@@ -128,3 +128,10 @@ npm run test
 | :--- | :--- | :--- |
 | **Frontend** | **Vercel** | Uses default Vite configuration, outputs static `dist/`. Env variables: `VITE_API_BASE_URL` |
 | **Backend** | **Railway** | Railway automatically detects `/backend/Dockerfile` and provisions PostgreSQL. Env variables: `PORT`, `DATABASE_URL`, `API_KEY` |
+
+---
+
+## 🔗 Live Application Links
+
+- **Frontend Application (Vercel)**: [https://openbiz-assignment-mu.vercel.app/](https://openbiz-assignment-mu.vercel.app/)
+- **Backend API Server (Railway)**: [https://openbizassignment-production-e54f.up.railway.app/](https://openbizassignment-production-e54f.up.railway.app/)
