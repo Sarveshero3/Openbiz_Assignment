@@ -1,0 +1,26 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model UdyamSubmission {
+  id              String   @id @default(uuid())
+  aadhaarNumber   String
+  ownerName       String
+  aadhaarVerified Boolean  @default(false)
+  orgType         String?
+  panNumber       String?
+  panOwnerName    String?
+  panOwnerDOB     DateTime?
+  panVerified     Boolean  @default(false)
+  itrFiled        String?
+  gstinAvailable  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("udyam_submissions")
+}
