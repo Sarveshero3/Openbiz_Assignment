@@ -12,7 +12,11 @@ async function startServer() {
     // ponytail: check connection to db on startup
     await prisma.$connect();
     logger.info('Database connection established successfully');
+  } catch (error) {
+    logger.warn('PostgreSQL database not reachable on startup. Running in in-memory fallback mode.');
+  }
 
+  try {
     const server = app.listen(PORT, () => {
       logger.info(`Server is running on port ${PORT}`);
     });
@@ -20,7 +24,9 @@ async function startServer() {
     const shutdown = async () => {
       logger.info('Shutting down server gracefully...');
       server.close(async () => {
-        await prisma.$disconnect();
+        try {
+          await prisma.$disconnect();
+        } catch (e) {}
         logger.info('Database disconnected. Process exited.');
         process.exit(0);
       });
