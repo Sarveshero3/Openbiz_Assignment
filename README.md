@@ -42,6 +42,22 @@ The database schema matches the fields scraped from the Udyam portal dynamically
 
 ---
 
+## 📸 Verification Flow Screenshots
+
+### Step 1: Aadhaar Verification (Form Initial)
+![Step 1 - Aadhaar Verification](docs/screenshots/step1-aadhaar.png)
+
+### Step 1.1: Aadhaar OTP Verification (Simulated OTP Code: 123456)
+![Step 1.1 - OTP Validation](docs/screenshots/step1-otp.png)
+
+### Step 2: PAN Verification (Form Initial)
+![Step 2 - PAN Verification](docs/screenshots/step2-pan.png)
+
+### Step 2.1: PAN Verification (Validated & Form Submitted)
+![Step 2.1 - Submission Completed](docs/screenshots/step2-filled.png)
+
+---
+
 ## ⚙️ Setup & Local Development
 
 ### 1. Backend Server Setup
