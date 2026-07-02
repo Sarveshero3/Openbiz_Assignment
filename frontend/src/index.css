@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+/* Government Dense Look Custom Font/Layout Overrides */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f7fafc;
+  color: #333333;
+}
