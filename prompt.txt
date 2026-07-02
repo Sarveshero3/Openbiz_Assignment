@@ -1,0 +1,165 @@
+
+I want you to build a clone of Step 1 (Aadhaar + OTP Verification) and Step 2
+(PAN Verification) of the Udyam Registration form:
+https://udyamregistration.gov.in/UdyamRegistration.aspx
+
+Full stack — frontend, backend, database — and it needs to be
+deployment-ready. This is a small assignment, so keep every part of it
+basic. Don't over-build anything.
+
+## 0. Antigravity setup
+
+1. Create `AGENTS.md` at the root with the project goal, the tech stack
+   (below), the folder rules, and a line that says "no scope beyond this
+   file."
+2. Ponytail is already installed — use it in `full` mode for this entire
+   build. Run `/ponytail-review` before you mark any module done.
+3. Get my approval on the Implementation Plan before you write any code.
+4. Keep a `docs/LESSONS.md` and update it as you go — scraping quirks,
+   validation edge cases, deployment gotchas, that kind of thing.
+5. Write clean, commented code, and commit in logical chunks as you go.
+   The assignment is graded on code quality and git hygiene too, not just
+   whether the app works.
+6. Finish with a Walkthrough artifact and before/after screenshots — the
+   real site next to your clone.
+
+## 1. Repo layout
+
+Two folders at the root, kept fully separate — don't mix frontend and
+backend code together, and don't nest one inside the other:
+
+```
+/frontend
+/backend
+/docs
+```
+
+## 2. Step 1 — Scrape the real form (required, not optional)
+
+Write a scraper script in `/backend/scripts/scrape-udyam.ts` using
+**Puppeteer** (fall back to Cheerio for anything static) that opens the
+live site, walks through Aadhaar + OTP verification and PAN verification,
+and pulls out: field name, label, input type, max length, placeholder,
+validation regex, and error text — plus the UI component itself (text
+input, dropdown/select, checkbox, button, etc.) for both steps.
+
+Save the result as `docs/udyam-schema.json`. Use Antigravity's `/browser`
+tool to visually confirm the scraper got it right and to grab reference
+screenshots. Do this before writing any frontend code — the frontend gets
+built off this file, not off guesses.
+
+## 3. Frontend
+
+**Stack**: React + Vite + TypeScript, Tailwind CSS for styling, one Axios
+instance for all API calls. No router — it's a two-step wizard on one
+page, step tracked with local state. No state management library, no
+Context API.
+
+Folders inside `src/`: `components`, `api`, `constants`, `utils`.
+
+**Required**:
+- Render both steps **dynamically from `udyam-schema.json`** — map over
+  the field list to generate inputs, don't hardcode each field's JSX.
+  This is a hard requirement, not a nice-to-have.
+- Real-time validation matching the scraped rules (PAN =
+  `[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}`, Aadhaar rules from the scrape).
+- Inline, field-level error messages — clear and specific, not a generic
+  "invalid input."
+- Mobile-first, fully responsive.
+- Visually match the real portal: plain, dense, government-form look
+  (colors, header/footer style, fonts from your screenshots), with
+  smooth, non-jarring transitions between the two steps. Not a generic
+  SaaS-landing-page look — it's a clone, it should read as one.
+
+**Bonus, only if the core flow is solid** (the assignment marks these as
+bonus, not required):
+- Progress tracker for Step 1 / Step 2.
+- PIN-code-to-city/state autofill via a free PIN code API.
+
+## 4. Backend
+
+**Stack**: Node.js + Express + TypeScript + Prisma ORM + PostgreSQL.
+
+Module structure under `src/app/udyam/`:
+```
+udyam.routes.ts
+udyam.controller.ts
+udyam.service.ts
+udyam.schema.ts
+dto/<method>-udyam.dto.ts
+```
+Top-level `src/` folders: `app`, `middlewares`, `utils`, `config`,
+`types`. Plus `app.ts` (middleware + routes) and `server.ts` (env, DB
+connection, start server).
+
+- Zod for DTOs, validating against the rules in `udyam-schema.json`.
+  Types inferred from the Zod schemas.
+- `ApiSuccessResponse` / `ApiErrorResponse` classes and custom error
+  classes in `utils/`, one error-handling middleware, an `asyncHandler`
+  wrapper so routes don't need try...catch boilerplate.
+- Light logging for errors — a basic logger is enough, don't wire up
+  exhaustive tracing.
+- Middlewares: `cors`, `helmet`, `morgan`, `express.json()`.
+- One `.env` file.
+- `GET /health`.
+
+Response shape:
+```
+{ "success": true,  "message": "...", "data": {...} }
+{ "success": false, "message": "...", "data": {...} }
+```
+
+**Basic authorization** (keep it minimal — no login, no signup, no JWT,
+no sessions): the endpoint that returns a stored submission holds PII
+(Aadhaar, PAN), so protect it with a single static API-key check — an
+`x-api-key` header compared against a value in `.env`. Every other
+endpoint (send-otp, verify-aadhaar, verify-pan, submit) stays public,
+same as the real public-facing Udyam form.
+
+## 5. Endpoints (`/api/v1/udyam`)
+
+- `POST /send-otp` — Aadhaar number + name, simulate OTP generation.
+- `POST /verify-aadhaar` — Aadhaar + OTP, mark verified.
+- `POST /verify-pan` — org type + PAN, validate against scraped rules,
+  400 on bad input.
+- `POST /submit` — store the full submission.
+- `GET /:id` — fetch one submission. **Protected** (API key).
+
+## 6. Database
+
+One `udyam_submissions` table, columns matching the actual fields in
+`udyam-schema.json` (at minimum: Aadhaar number, entrepreneur name,
+Aadhaar-verified flag, organisation type, PAN, PAN-verified flag,
+timestamps).
+
+## 7. Testing
+
+Jest, covering exactly what the assignment asks for:
+- Validation logic: valid PAN, invalid PAN, valid Aadhaar, invalid
+  Aadhaar, empty fields.
+- API: `POST /verify-pan` and `POST /submit` return 400 on invalid data,
+  200 on valid data.
+
+No e2e, no coverage targets beyond this list.
+
+## 8. Deployment
+
+- Frontend → **Vercel**.
+- Backend → **Railway**, using Railway's built-in Postgres add-on.
+- Minimal `Dockerfile` for the backend.
+- Root `README.md`: local setup steps, env vars needed, and both live
+  URLs once deployed.
+
+## 9. Explicitly skip
+
+- Login/signup, JWT, sessions, protected routes beyond the one API-key
+  check above.
+- State management libraries, Context API, routing libraries.
+- Real UIDAI/Income Tax integration — OTP and PAN checks are
+  format-validated/simulated only.
+- Standalone architecture diagrams, ERDs, or flow-chart deliverables —
+  the schema JSON, the LESSONS doc, and the README are documentation
+  enough.
+- CI/CD, staging environments, feature flags.
+- Anything not listed above — if you're about to add it, run
+  `/ponytail-review` and ask if it's actually needed.
